@@ -13,6 +13,7 @@ token = "bot_token"
 client_id = "bot_client_id"
 nick = "bot_nick"
 save_interval = 60  # Save messages every 60 seconds
+msg_per_sec_updater = 2 # Update msg/s every 2 seconds
 
 conn = sqlite3.connect('chatlog.db')
 c = conn.cursor()
@@ -34,16 +35,16 @@ class Bot(commands.Bot):
         super().__init__(token=token, client_id=client_id, nick=nick, prefix='',
                          initial_channels=channels)
         
-        self.smoothing_factor = 0.8  # Smoothing factor for the message count
         # ------------------------------
+        self.msg_per_sec = 0
         self.channel_message_count = 0
-        self.channel_start_time = time.time()
-        self.channel_smoothed_count = 0
         self.channel_colors = self.assign_colors_to_channels()
         self.last_save_time = time.time()
         self.max_msg_per_sec = 0 
         self.word_count = 0
         self.word_start_time = time.time()
+        self.msg_per_sec = 0
+        self.last_avg = time.time()
 
     def assign_colors_to_channels(self):
         # Shuffle the available colors and assign them to channels
@@ -88,20 +89,16 @@ class Bot(commands.Bot):
         # Increment message count
         self.channel_message_count += 1
 
-        # Calculate time elapsed
-        elapsed_time = time.time() - self.channel_start_time
-
-        # Calculate smoothed message count
-        self.channel_smoothed_count = (
-            self.smoothing_factor * self.channel_smoothed_count +
-            (1 - self.smoothing_factor) * self.channel_message_count
-        )
 
         # Calculate messages per second (msg/s)
-        msg_per_sec = self.channel_smoothed_count / elapsed_time
+        elapsed_time_msg = time.time() - self.last_avg
+        if elapsed_time_msg >= msg_per_sec_updater:
+            self.msg_per_sec = self.channel_message_count / elapsed_time_msg
+            self.channel_message_count = 0
+            self.last_avg = time.time()
 
         # Update the maximum messages per second observed across all channels
-        self.max_msg_per_sec = max(self.max_msg_per_sec, msg_per_sec)
+        self.max_msg_per_sec = max(self.max_msg_per_sec, self.msg_per_sec)
 
         # Calculate words per second (words/s) for the channel
         self.word_count += len(re.findall(r'\b\w+\b', message.content))
@@ -114,13 +111,13 @@ class Bot(commands.Bot):
         color = self.channel_colors[channel]
 
         # Calculate the gradient color for the messages per second
-        gradient_color_msg = self.calculate_gradient_color(msg_per_sec)
+        gradient_color_msg = self.calculate_gradient_color(self.msg_per_sec)
 
         # Calculate the gradient color for the words per second
         gradient_color_word = self.calculate_gradient_color(words_per_sec)
 
         # Print chat messages to the terminal with color
-        print(f'{timestamp} {gradient_color_msg}({msg_per_sec:.2f} msg/s) {gradient_color_word}({words_per_sec:.2f} words/s) {color}[{channel}] {message.author.name}: {enc_message}{Style.RESET_ALL}')
+        print(f'{timestamp} {gradient_color_msg}({self.msg_per_sec:.2f} msg/s) {gradient_color_word}({words_per_sec:.2f} words/s) {color}[{channel}] {message.author.name}: {enc_message}{Style.RESET_ALL}')
 
         await self.handle_commands(message)
 
