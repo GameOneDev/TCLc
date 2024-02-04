@@ -7,7 +7,7 @@
 ---
 ## Installing/Getting started
 
-### Requirements
+### Pip requirements
  - `twitchio`
  - `colorama`
  
