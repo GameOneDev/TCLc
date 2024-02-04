@@ -24,7 +24,7 @@ pip install -r requirements.txt
 ```
 channels = ["1channel", "2channel", "3channel"]
 ```
-> No limit, but i recommend no more than 8
+> No limit, but i recommend < 8
 ### Specify your `token`, `client_id` and `nick`
 > `token` from **[Twitch token generator](https://twitchtokengenerator.com/)**
 
@@ -39,4 +39,4 @@ nick = "bot_nick"
 ### Simply use: `python twitch-chat-logger.py`
 You should then have the `chatlog.db` (SQLite database) in your folder.
 
-> To view it you will need a program to view SQLite databases, I recommend [DB Browser for SQLite](https://sqlitebrowser.org/)
+> To view it, you will need a program to view SQLite databases, I recommend [DB Browser for SQLite](https://sqlitebrowser.org/)
