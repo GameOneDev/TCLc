@@ -13,7 +13,7 @@
  
 ### With git
 ```
-git clone https://github.com/GameOneYT/twitch-chat-logger.git
+git clone https://github.com/GameOneDev/twitch-chat-logger.git
 cd twitch-chat-logger
 pip install -r requirements.txt
 ```
